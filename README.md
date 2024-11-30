@@ -1,4 +1,4 @@
-# Chrome/Edge extention to change the names of selected assholes
+# Chrome/Edge extension to replaced words with other words
 
 ## Setup
 
