@@ -1,4 +1,4 @@
-# Chrome/Edge extension to replaced words with other words
+# Chrome/Edge extension to replace words with other words
 
 ## Setup
 
