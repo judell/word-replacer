@@ -1,22 +1,22 @@
 // content.js
 let wordMappings = {};
 
-console.log('Content script loaded');
+// console.log('Content script loaded');
 
 // Load word mappings from storage
 chrome.storage.local.get('wordMappings', (data) => {
-  console.log('Initial storage data:', data);
+  // console.log('Initial storage data:', data);
   if (data.wordMappings) {
     wordMappings = data.wordMappings;
-    console.log('Loaded mappings:', wordMappings);
+   // console.log('Loaded mappings:', wordMappings);
     replaceWords();
   } else {
-    console.log('No initial mappings found in storage');
+   // console.log('No initial mappings found in storage');
   }
 });
 
 function replaceWords() {
-  console.log('Starting word replacement with mappings:', wordMappings);
+  // console.log('Starting word replacement with mappings:', wordMappings);
   
   const textNodes = document.evaluate(
     '//text()[not(ancestor::script)][not(ancestor::style)]',
@@ -26,7 +26,7 @@ function replaceWords() {
     null
   );
 
-  console.log('Found text nodes:', textNodes.snapshotLength);
+  // console.log('Found text nodes:', textNodes.snapshotLength);
 
   for (let i = 0; i < textNodes.snapshotLength; i++) {
     let node = textNodes.snapshotItem(i);
@@ -37,26 +37,26 @@ function replaceWords() {
       const regex = new RegExp(`\\b${original}\\b`, 'gi');
       const matches = text.match(regex);
       if (matches) {
-        console.log(`Found "${original}" in text:`, matches.length, 'times');
+       // console.log(`Found "${original}" in text:`, matches.length, 'times');
         text = text.replace(regex, replacement);
       }
     }
 
     if (text !== originalText) {
-      console.log('Text changed from:', originalText);
-      console.log('To:', text);
+      // console.log('Text changed from:', originalText);
+      // console.log('To:', text);
       node.textContent = text;
     }
   }
-  console.log('Word replacement complete');
+  // console.log('Word replacement complete');
 }
 
 // Listen for changes in word mappings
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Message received:', request);
+  // console.log('Message received:', request);
   
   if (request.type === 'updateMappings') {
-    console.log('Updating mappings to:', request.mappings);
+    // console.log('Updating mappings to:', request.mappings);
     wordMappings = request.mappings;
     replaceWords();
     sendResponse({status: 'success'});
@@ -66,7 +66,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Add a mutation observer to handle dynamic content
 const observer = new MutationObserver((mutations) => {
-  console.log('DOM mutation detected:', mutations.length, 'changes');
+  // console.log('DOM mutation detected:', mutations.length, 'changes');
   replaceWords();
 });
 
@@ -76,4 +76,4 @@ observer.observe(document.body, {
   subtree: true
 });
 
-console.log('Mutation observer set up');
+// console.log('Mutation observer set up');
