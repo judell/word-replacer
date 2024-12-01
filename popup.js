@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('save').addEventListener('click', async () => {
     try {
-      // Gather mappings
       const mappings = {};
       document.querySelectorAll('.mapping').forEach(div => {
         const original = div.querySelector('.original').value.trim();
@@ -35,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      // Gather exceptions
       const exceptions = [];
       document.querySelectorAll('.exception').forEach(div => {
         const phrase = div.querySelector('.phrase').value.trim();
@@ -44,27 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      // Save to storage first
       await chrome.storage.local.set({ 
         wordMappings: mappings,
         wordExceptions: exceptions
       });
     
-      // Get the current active tab
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-      // Send message and wait for response before closing
       await chrome.tabs.sendMessage(tab.id, {
         type: 'updateMappings',
         mappings: mappings,
         exceptions: exceptions
       });
 
-      // Only close after we've confirmed the message was sent
       window.close();
     } catch (error) {
       console.error('Error saving settings:', error);
-      // Optionally show error to user
       alert('Error saving settings. Please try again.');
     }
   });
@@ -73,8 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const div = document.createElement('div');
     div.className = 'mapping';
     div.innerHTML = `
-      <input type="text" class="original" placeholder="Original word" value="${original}">
-      <input type="text" class="replacement" placeholder="Replace with" value="${replacement}">
+      <div class="mapping-inputs">
+        <input type="text" class="original" placeholder="Original word" value="${original}">
+        <input type="text" class="replacement" placeholder="Replace with" value="${replacement}">
+      </div>
       <button class="remove">Remove</button>
     `;
     

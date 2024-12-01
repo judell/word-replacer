@@ -2,15 +2,39 @@
 <html>
 <head>
   <style>
+    body {
+      width: 300px;
+      padding: 15px;
+    }
     .section {
       margin-bottom: 20px;
-    }
-    .mapping, .exception {
-      margin: 5px 0;
     }
     .section-title {
       font-weight: bold;
       margin: 10px 0;
+    }
+    .mapping, .exception {
+      margin-bottom: 15px;
+    }
+    .mapping-inputs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+    .mapping-inputs input {
+      flex: 1;
+    }
+    .exception input {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    button {
+      padding: 3px 8px;
+    }
+    #save {
+      width: 100%;
+      margin-top: 15px;
+      padding: 5px;
     }
   </style>
 </head>
