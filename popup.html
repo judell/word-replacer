@@ -2,24 +2,35 @@
 <html>
 <head>
   <style>
-    body {
-      width: 300px;
-      padding: 10px;
+    .section {
+      margin-bottom: 20px;
     }
-    .mapping {
-      margin-bottom: 10px;
+    .mapping, .exception {
+      margin: 5px 0;
     }
-    input {
-      margin: 5px;
-      width: 120px;
+    .section-title {
+      font-weight: bold;
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
   <h2>Word Replacer</h2>
-  <div id="mappings"></div>
-  <button id="addMapping">Add New Mapping</button>
+  
+  <div class="section">
+    <div class="section-title">Replace these words/phrases:</div>
+    <div id="mappings"></div>
+    <button id="addMapping">Add New Replacement</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Don't replace these phrases:</div>
+    <div id="exceptions"></div>
+    <button id="addException">Add Exception</button>
+  </div>
+
   <button id="save">Save</button>
+  
   <script src="popup.js"></script>
 </body>
 </html>
