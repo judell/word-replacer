@@ -1,5 +1,11 @@
-let wordMappings = {};
-let wordExceptions = [];
+let wordMappings;  // Could be undefined (not in storage), null, or an object 
+let wordExceptions; // Could be undefined (from v1.0), null, or an arraylet wordMappings = {};
+
+chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
+  wordMappings = data.wordMappings || {};
+  wordExceptions = data.wordExceptions || [];
+  replaceWords();
+});
 
 chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
   console.log('Initial load:', { 
@@ -7,8 +13,6 @@ chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
     exceptions: data.wordExceptions || []
   });
   
-  wordMappings = data.wordMappings || {};
-  wordExceptions = data.wordExceptions || [];
   replaceWords();
 });
 
@@ -98,7 +102,7 @@ function replaceWords() {
     result += text.substring(lastIndex);
     
     if (result !== text) {
-      // console.log('Changed:', { from: text, to: result });
+      //console.log('Changed:', { from: text, to: result });
       node.textContent = result;
     }
   }
