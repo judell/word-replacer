@@ -32,7 +32,7 @@ function replaceWords() {
     
     if (!hasTargetWord) continue;
 
-    console.log('Processing text containing target word:', text);
+    // console.log('Processing text containing target word:', text);
 
     // Build a list of words/phrases to check and their positions
     let matches = [];
@@ -98,7 +98,7 @@ function replaceWords() {
     result += text.substring(lastIndex);
     
     if (result !== text) {
-      console.log('Changed:', { from: text, to: result });
+      // console.log('Changed:', { from: text, to: result });
       node.textContent = result;
     }
   }
