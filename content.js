@@ -59,12 +59,18 @@ function replaceWords() {
       const regex = new RegExp(`\\b${original}\\b`, 'gi');
       let match;
       while ((match = regex.exec(text)) !== null) {
-        // Only add if it doesn't overlap with an exception
         const overlapsException = matches.some(m => 
           m.isException && 
-          ((match.index >= m.start && match.index < m.end) ||
-           (match.index + match[0].length > m.start && match.index + match[0].length <= m.end))
+          (
+            // Check if the start of the replacement falls within the exception range
+            (match.index >= m.start && match.index < m.end) || 
+        
+            // Check if the end of the replacement falls within the exception range
+            (match.index + match[0].length > m.start && 
+             match.index + match[0].length <= m.end)
+          )
         );
+        
         
         if (!overlapsException) {
           matches.push({
