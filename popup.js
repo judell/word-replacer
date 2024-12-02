@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
           mappings[original] = replacement;
         }
       });
-
+  
       const exceptions = [];
       document.querySelectorAll('.exception').forEach(div => {
         const phrase = div.querySelector('.phrase').value.trim();
@@ -41,19 +41,30 @@ document.addEventListener('DOMContentLoaded', () => {
           exceptions.push(phrase);
         }
       });
-
+  
+      // First, save to storage
       await chrome.storage.local.set({ 
         wordMappings: mappings,
         wordExceptions: exceptions
       });
     
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      await chrome.tabs.sendMessage(tab.id, {
-        type: 'updateMappings',
-        mappings: mappings,
-        exceptions: exceptions
-      });
-
+      // Then try to update any active tab
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        
+        // Check if we can inject into this tab
+        if (!tab.url.startsWith('chrome://') && !tab.url.startsWith('edge://')) {
+          await chrome.tabs.sendMessage(tab.id, {
+            type: 'updateMappings',
+            mappings: mappings,
+            exceptions: exceptions
+          });
+        }
+      } catch (messageError) {
+        // If message fails, that's ok - changes are still saved to storage
+        console.log('Could not update active tab, but settings were saved:', messageError);
+      }
+  
       window.close();
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -66,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     div.className = 'mapping';
     div.innerHTML = `
       <div class="mapping-inputs">
-        <input type="text" class="original" placeholder="Original word" value="${original}">
+        <input type="text" class="original" placeholder="Original word/phrase" value="${original}">
         <input type="text" class="replacement" placeholder="Replace with" value="${replacement}">
       </div>
       <button class="remove">Remove</button>
