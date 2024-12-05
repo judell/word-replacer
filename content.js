@@ -1,18 +1,35 @@
 let wordMappings;  // Could be undefined (not in storage), null, or an object 
-let wordExceptions; // Could be undefined (from v1.0), null, or an arraylet wordMappings = {};
+let wordExceptions; // Could be undefined (from v1.0), null, or an array
 
 chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
-  wordMappings = data.wordMappings || {};
+  // Normalize all keys to lowercase
+  const normalizedMappings = {};
+  if (data.wordMappings) {
+    Object.entries(data.wordMappings).forEach(([key, value]) => {
+      normalizedMappings[key.toLowerCase()] = value;
+    });
+  }
+  wordMappings = normalizedMappings;
   wordExceptions = data.wordExceptions || [];
   replaceWords();
 });
 
 chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
+  // Normalize all keys to lowercase for logging and storage
+  const normalizedMappings = {};
+  if (data.wordMappings) {
+    Object.entries(data.wordMappings).forEach(([key, value]) => {
+      normalizedMappings[key.toLowerCase()] = value;
+    });
+  }
+  
   console.log('Initial load:', { 
-    mappings: data.wordMappings || {},
+    mappings: normalizedMappings,
     exceptions: data.wordExceptions || []
   });
   
+  wordMappings = normalizedMappings;
+  wordExceptions = data.wordExceptions || [];
   replaceWords();
 });
 
@@ -71,7 +88,6 @@ function replaceWords() {
           )
         );
         
-        
         if (!overlapsException) {
           matches.push({
             start: match.index,
@@ -98,7 +114,8 @@ function replaceWords() {
       if (match.isException) {
         result += match.text;
       } else {
-        result += wordMappings[match.text] || wordMappings[match.text.toLowerCase()] || match.text;
+        // Use lowercase for lookup
+        result += wordMappings[match.text.toLowerCase()] || match.text;
       }
       
       lastIndex = match.end;
@@ -121,7 +138,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       exceptions: request.exceptions
     });
     
-    wordMappings = request.mappings;
+    // Normalize all keys to lowercase
+    const normalizedMappings = {};
+    Object.entries(request.mappings).forEach(([key, value]) => {
+      normalizedMappings[key.toLowerCase()] = value;
+    });
+    
+    wordMappings = normalizedMappings;
     wordExceptions = request.exceptions;
     replaceWords();
     sendResponse({status: 'success'});
