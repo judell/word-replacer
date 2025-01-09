@@ -1,39 +1,53 @@
-let wordMappings;  // Could be undefined (not in storage), null, or an object 
-let wordExceptions; // Could be undefined (from v1.0), null, or an array
+// content.js
+console.log('Content script loaded!'); // Debug Point 1
 
-chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
-  // Normalize all keys to lowercase
-  const normalizedMappings = {};
-  if (data.wordMappings) {
-    Object.entries(data.wordMappings).forEach(([key, value]) => {
-      normalizedMappings[key.toLowerCase()] = value;
-    });
-  }
-  wordMappings = normalizedMappings;
-  wordExceptions = data.wordExceptions || [];
-  replaceWords();
-});
+let wordMappings;
+let wordExceptions;
 
-chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
-  // Normalize all keys to lowercase for logging and storage
-  const normalizedMappings = {};
-  if (data.wordMappings) {
-    Object.entries(data.wordMappings).forEach(([key, value]) => {
-      normalizedMappings[key.toLowerCase()] = value;
-    });
+async function initializeExtension() {
+  console.log('initializeExtension called'); // Debug Point 2
+  try {
+    console.log('Fetching storage data...'); // Debug Point 3
+    const data = await browserAPI.storage.local.get(['wordMappings', 'wordExceptions']);
+    console.log('Storage data received:', data); // Debug Point 4
+    
+    // Normalize all keys to lowercase
+    const normalizedMappings = {};
+    if (data.wordMappings) {
+      Object.entries(data.wordMappings).forEach(([key, value]) => {
+        normalizedMappings[key.toLowerCase()] = value;
+      });
+    }
+    
+    console.log('Normalized mappings:', normalizedMappings); // Debug Point 5
+    wordMappings = normalizedMappings;
+    wordExceptions = data.wordExceptions || [];
+    
+    // Wait for document to be ready
+    if (document.readyState === 'loading') {
+      console.log('Document still loading, adding DOMContentLoaded listener'); // Debug Point 6
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded fired'); // Debug Point 7
+        replaceWords();
+      });
+    } else {
+      console.log('Document already loaded, calling replaceWords directly'); // Debug Point 8
+      replaceWords();
+    }
+  } catch (error) {
+    console.error('Error in initializeExtension:', error); // Debug Point 9
   }
-  
-  console.log('Initial load:', { 
-    mappings: normalizedMappings,
-    exceptions: data.wordExceptions || []
-  });
-  
-  wordMappings = normalizedMappings;
-  wordExceptions = data.wordExceptions || [];
-  replaceWords();
-});
+}
 
 function replaceWords() {
+  console.log('replaceWords called'); // Debug Point 10
+  if (!wordMappings) {
+    console.log('No word mappings available yet');
+    return;
+  }
+
+  console.log('Current word mappings:', wordMappings); // Debug Point 11
+
   const textNodes = document.evaluate(
     '//text()[not(ancestor::script)][not(ancestor::style)]',
     document,
@@ -41,6 +55,8 @@ function replaceWords() {
     XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE,
     null
   );
+
+  console.log(`Found ${textNodes.snapshotLength} text nodes to process`); // Debug Point 12
 
   for (let i = 0; i < textNodes.snapshotLength; i++) {
     let node = textNodes.snapshotItem(i);
@@ -131,26 +147,43 @@ function replaceWords() {
   }
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+// Message listener setup
+browserAPI.runtime.onMessage.addListener((request, sender) => {
+  console.log('Message received:', request); // Debug Point 13
   if (request.type === 'updateMappings') {
-    console.log('Received update:', {
-      mappings: request.mappings,
-      exceptions: request.exceptions
-    });
-    
-    // Normalize all keys to lowercase
-    const normalizedMappings = {};
-    Object.entries(request.mappings).forEach(([key, value]) => {
-      normalizedMappings[key.toLowerCase()] = value;
-    });
-    
-    wordMappings = normalizedMappings;
-    wordExceptions = request.exceptions;
-    replaceWords();
-    sendResponse({status: 'success'});
+    try {
+      console.log('Processing updateMappings message'); // Debug Point 14
+      const normalizedMappings = {};
+      Object.entries(request.mappings).forEach(([key, value]) => {
+        normalizedMappings[key.toLowerCase()] = value;
+      });
+      
+      wordMappings = normalizedMappings;
+      wordExceptions = request.exceptions;
+      replaceWords();
+      return Promise.resolve({ status: 'success' });
+    } catch (error) {
+      console.error('Error handling message:', error);
+      return Promise.reject(error);
+    }
   }
-  return true;
+  return Promise.resolve({ status: 'unknown_message' });
 });
 
-const observer = new MutationObserver(replaceWords);
-observer.observe(document.body, { childList: true, subtree: true });
+// Setup and initialization
+console.log('Document readyState:', document.readyState); // Debug Point 15
+
+if (document.readyState === 'loading') {
+  console.log('Adding DOMContentLoaded listener for initialization'); // Debug Point 16
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded - starting initialization'); // Debug Point 17
+    initializeExtension();
+  });
+} else {
+  console.log('Document already loaded - initializing immediately'); // Debug Point 18
+  initializeExtension();
+}
+
+// For debugging browser API availability
+console.log('browser API available:', typeof browser !== 'undefined'); // Debug Point 19
+console.log('chrome API available:', typeof chrome !== 'undefined'); // Debug Point 20

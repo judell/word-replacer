@@ -1,19 +1,18 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const mappingsDiv = document.getElementById('mappings');
   const exceptionsDiv = document.getElementById('exceptions');
   
-  // Load existing mappings and exceptions
-  chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
-    const mappings = data.wordMappings || {};
-    for (const [original, replacement] of Object.entries(mappings)) {
-      addMappingInputs(original, replacement);
-    }
+  // Load existing mappings and exceptions using unified API
+  const data = await browserAPI.storage.local.get(['wordMappings', 'wordExceptions']);
+  const mappings = data.wordMappings || {};
+  for (const [original, replacement] of Object.entries(mappings)) {
+    addMappingInputs(original, replacement);
+  }
 
-    const exceptions = data.wordExceptions || [];
-    for (const exception of exceptions) {
-      addExceptionInput(exception);
-    }
-  });
+  const exceptions = data.wordExceptions || [];
+  for (const exception of exceptions) {
+    addExceptionInput(exception);
+  }
 
   document.getElementById('addMapping').addEventListener('click', () => {
     addMappingInputs();
@@ -42,26 +41,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
   
-      // First, save to storage
-      await chrome.storage.local.set({ 
+      // Save using unified API
+      await browserAPI.storage.local.set({ 
         wordMappings: mappings,
         wordExceptions: exceptions
       });
     
-      // Then try to update any active tab
       try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
+        const currentUrl = tabs[0].url;
         
-        // Check if we can inject into this tab
-        if (!tab.url.startsWith('chrome://') && !tab.url.startsWith('edge://')) {
-          await chrome.tabs.sendMessage(tab.id, {
+        // Check for browser-specific protected URLs
+        if (!currentUrl.startsWith('chrome://') && 
+            !currentUrl.startsWith('edge://') && 
+            !currentUrl.startsWith('about:') && 
+            !currentUrl.startsWith('moz-extension://')) {
+          
+          await browserAPI.tabs.sendMessage(tabs[0].id, {
             type: 'updateMappings',
             mappings: mappings,
             exceptions: exceptions
           });
         }
       } catch (messageError) {
-        // If message fails, that's ok - changes are still saved to storage
         console.log('Could not update active tab, but settings were saved:', messageError);
       }
   
