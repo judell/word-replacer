@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+  debugger
   const mappingsDiv = document.getElementById('mappings');
   const exceptionsDiv = document.getElementById('exceptions');
-  
+
   // Load existing mappings and exceptions
   chrome.storage.local.get(['wordMappings', 'wordExceptions'], (data) => {
     const mappings = data.wordMappings || {};
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('save').addEventListener('click', async () => {
+    debugger
     try {
       const mappings = {};
       document.querySelectorAll('.mapping').forEach(div => {
@@ -33,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
           mappings[original] = replacement;
         }
       });
-  
+
       const exceptions = [];
       document.querySelectorAll('.exception').forEach(div => {
         const phrase = div.querySelector('.phrase').value.trim();
@@ -41,17 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
           exceptions.push(phrase);
         }
       });
-  
+
       // First, save to storage
-      await chrome.storage.local.set({ 
+      await chrome.storage.local.set({
         wordMappings: mappings,
         wordExceptions: exceptions
       });
-    
+
       // Then try to update any active tab
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        
+
         // Check if we can inject into this tab
         if (!tab.url.startsWith('chrome://') && !tab.url.startsWith('edge://')) {
           await chrome.tabs.sendMessage(tab.id, {
@@ -64,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // If message fails, that's ok - changes are still saved to storage
         console.log('Could not update active tab, but settings were saved:', messageError);
       }
-  
+
       window.close();
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -82,11 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <button class="remove">Remove</button>
     `;
-    
+
     div.querySelector('.remove').addEventListener('click', () => {
       div.remove();
     });
-    
+
     mappingsDiv.appendChild(div);
   }
 
@@ -97,11 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
       <input type="text" class="phrase" placeholder="Don't replace this phrase" value="${phrase}">
       <button class="remove">Remove</button>
     `;
-    
+
     div.querySelector('.remove').addEventListener('click', () => {
       div.remove();
     });
-    
+
     exceptionsDiv.appendChild(div);
   }
 });
